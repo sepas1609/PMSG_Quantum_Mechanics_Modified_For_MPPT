@@ -19,7 +19,7 @@
 4. [Control Topologies & Flowcharts](#-control-topologies--flowcharts)
    - [Quantum vs. Classical Sensing Flowchart](#quantum-vs-classical-sensing-pipeline)
    - [High-Bandwidth Quantum P&O Algorithm](#quantum-perturb--observe-mppt-algorithm)
-   - [Neural Network (RBFN / BPNN) & Quadratic Boost Architecture](#neural-network--quadratic-boost-converter-topology)
+   - [Neural Network & Quadratic Boost Architecture](#neural-network--quadratic-boost-converter-topology)
 5. [Mathematical Modeling](#-mathematical-modeling)
 6. [Comparative Benchmarks & Results](#-comparative-benchmarks--results)
 7. [Repository File Hierarchy](#-repository-file-hierarchy)
@@ -34,15 +34,15 @@
 In renewable energy systems, **Permanent Magnet Synchronous Generator (PMSG)** direct-drive wind turbines are widely used due to their gearless high efficiency and robust power density. However, extracting maximum kinetic energy under non-stationary wind velocity profiles requires ultra-fast **Maximum Power Point Tracking (MPPT)**.
 
 ```
-Turbulent Wind Gusts (8 m/s → 14 m/s) ──► Aerodynamic Torque ──► PMSG Stator Flux ──► Sensing Bottleneck
-                                                                                               │
-  ┌───────────────────────────────── SENSING BOTTLENECK ───────────────────────────────────────┘
-  │
-  ├──► [Classical Hall-Effect / Shunt]: ❌ 50 µs RC filter delay + Inverter EMI noise (±5%)
-  │                                     └──► MPPT gradient sign error (dP/dV) ──► Violent Torque Oscillation
-  │
-  └──► [Quantum Diamond NV-Center]    : ✅ <1 µs Atomic spin response + Optical immunity (±0.1% Shot noise)
-                                        └──► Instant gradient tracking ──► +3.5% Net Energy Harvest
+Turbulent Wind Gusts (8 m/s -> 14 m/s) ---> Aerodynamic Torque ---> PMSG Stator Flux ---> Sensing Bottleneck
+                                                                                               |
+  +--------------------------------- SENSING BOTTLENECK ---------------------------------------+
+  |
+  +---> [Classical Hall-Effect / Shunt]: [!] 50 us RC filter delay + Inverter EMI noise (+/- 5%)
+  |                                      `---> MPPT gradient sign error (dP/dV) ---> Violent Torque Oscillation
+  |
+  +---> [Quantum Diamond NV-Center]    : [OK] Sub-microsecond spin response + Optical immunity (+/- 0.1% Shot noise)
+                                         `---> Instant gradient tracking ---> +3.5% Net Energy Harvest
 ```
 
 ### The Classical Bottleneck
@@ -63,51 +63,37 @@ By integrating an optical **Diamond Nitrogen-Vacancy (NV) Center Magnetometer**,
 
 ```mermaid
 graph TD
-    subgraph Wind_Turbine_Aerodynamics["🌬️ Aerodynamics & Rotor Dynamics"]
-        Vw["Wind Velocity v(t) (Turbulent Gusts: 8 → 14 → 9 m/s)"] --> Blades["Rotor Blades (Radius R = 2.5 m)"]
-        Blades --> AeroTorque["Aerodynamic Torque Tm = 0.5 · ρ · π · R² · Cp(λ,β) · v³ / ωm"]
-        AeroTorque --> Shaft["Mechanical Drive Shaft (Inertia J)"]
+    subgraph Wind_Turbine_Aerodynamics["Wind Turbine Aerodynamics"]
+        Vw["Wind Velocity v(t)<br/>Turbulent Gusts: 8 to 14 to 9 m/s"] --> Blades["Rotor Blades<br/>Radius R = 2.5 m"]
+        Blades --> AeroTorque["Aerodynamic Mechanical Torque<br/>Tm = 0.5 * rho * pi * R^2 * Cp * v^3 / omega_m"]
+        AeroTorque --> Shaft["Mechanical Drive Shaft<br/>Rotor Inertia J"]
     end
 
-    subgraph PMSG_Generator["⚡ Permanent Magnet Synchronous Generator (5 kW)"]
-        Shaft --> PMSG["PMSG Machine (p = 3 pole pairs, λf = 0.1757 Wb)"]
+    subgraph PMSG_Generator["PMSG Generator (5 kW)"]
+        Shaft --> PMSG["PMSG Machine<br/>p = 3 pole pairs, flux = 0.1757 Wb"]
         PMSG --> StatorFlux["Stator Magnetic Flux Vector B(t)"]
         PMSG --> ThreePhaseAC["Three-Phase AC Output (ua, ub, uc)"]
     end
 
-    subgraph Power_Electronics["🔌 Power Conversion Stage"]
-        ThreePhaseAC --> DiodeRectifier["Three-Phase Uncontrolled / Active Rectifier"]
+    subgraph Power_Electronics["Power Conversion Stage"]
+        ThreePhaseAC --> DiodeRectifier["Three-Phase Passive / Active Rectifier"]
         DiodeRectifier --> DC_Link["DC-Link Bus (Cdc, Vdc = 300V)"]
         DC_Link --> DC_Converter["DC-DC Quadratic / Standard Boost Converter"]
-        DC_Converter --> OutputLoad["Inverter / Grid / DC Load"]
+        DC_Converter --> OutputLoad["Inverter / DC Load Grid"]
     end
 
-    subgraph Sensing_Layer["🔬 Dual Sensing Architecture (Comparison Benchmark)"]
-        StatorFlux -.->|"Galvanic / Inductive Coupling (EMI + Filter Lag)"| HallSensor["Classical Hall-Effect Sensor<br/>• Noise: ±5.0%<br/>• Bandwidth Lag: 50 µs"]
-        StatorFlux ==="Optical Laser Interrogation (532 nm)"===> NVSensor["Diamond NV-Center Magnetometer<br/>• Shot Noise: ±0.1%<br/>• Spin Bandwidth: <1 µs<br/>• Zero EMI Interference"]
+    subgraph Sensing_Layer["Dual Sensing Architecture (Benchmark)"]
+        StatorFlux -.->|"Galvanic / Inductive (EMI + 50us Delay)"| HallSensor["Classical Hall-Effect Sensor<br/>Noise: +/-5.0%<br/>Filter Lag: 50 us"]
+        StatorFlux ==>|"Optical 532 nm Laser Interrogation"| NVSensor["Diamond NV-Center Magnetometer<br/>Shot Noise: +/-0.1%<br/>Spin Latency: sub-1 us<br/>Complete EMI Immunity"]
     end
 
-    subgraph MPPT_Control_Engine["🧠 High-Speed MPPT Controller"]
-        HallSensor -.->|"Noisy (V, I) Feedback"| ClassicalPO["Classical P&O Controller<br/>(Delayed, Oscillating)"]
-        NVSensor ===|"True Real-Time Flux & Instant V, I"===> QuantumPO["Quantum-Enhanced P&O / RBFN<br/>(Zero-Lag Gradient dP/dV)"]
+    subgraph MPPT_Control_Engine["MPPT Control Engine"]
+        HallSensor -.->|"Delayed Feedback"| ClassicalPO["Classical P&O Controller<br/>Prone to hunting & oscillation"]
+        NVSensor ==>|"Real-Time High-Fidelity Feedback"| QuantumPO["Quantum-Enhanced P&O / RBFN<br/>Zero-lag gradient tracking"]
         ClassicalPO -.->|"Duty Cycle D_cl"| PWM_Gen["PWM Gate Driver (fs = 20 kHz)"]
-        QuantumPO ===|"Optimal Duty Cycle D_opt"===> PWM_Gen
+        QuantumPO ==>|"Optimal Duty Cycle D_opt"| PWM_Gen
         PWM_Gen --> DC_Converter
     end
-
-    classDef wind fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
-    classDef pmsg fill:#1e1e38,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
-    classDef power fill:#2e1065,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
-    classDef classical fill:#450a0a,stroke:#f87171,stroke-width:2px,color:#f8fafc;
-    classDef quantum fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
-    classDef control fill:#0f172a,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
-
-    class Wind_Turbine_Aerodynamics wind;
-    class PMSG_Generator pmsg;
-    class Power_Electronics power;
-    class HallSensor,ClassicalPO classical;
-    class NVSensor,QuantumPO quantum;
-    class MPPT_Control_Engine control;
 ```
 
 ---
@@ -117,16 +103,16 @@ graph TD
 The Nitrogen-Vacancy (NV) center in diamond consists of a substitutional nitrogen atom adjacent to a vacancy in the diamond carbon lattice. The negatively charged $\text{NV}^-$ center possesses an electron spin triplet ($S=1$) ground state with outstanding quantum coherence at room temperature.
 
 ```
-   Triplet Ground State Energy Diagram (³A₂)
+   Triplet Ground State Energy Diagram (3A2)
               
-              |ms = +1⟩ ───────────   f+ = Dgs + γe·Bz
-                ▲ 
-                │ Zeeman Splitting (Δf = 2 γe · Bz)
-   Dgs = 2.87 GHz│
-                ▼
-              |ms = -1⟩ ───────────   f- = Dgs - γe·Bz
+              |ms = +1> -----------   f+ = Dgs + gamma_e * Bz
+                ^ 
+                | Zeeman Splitting (Delta_f = 2 * gamma_e * Bz)
+   Dgs = 2.87 GHz|
+                v
+              |ms = -1> -----------   f- = Dgs - gamma_e * Bz
               
-              |ms = 0⟩  ═══════════ (Unperturbed Ground)
+              |ms =  0> =========== (Unperturbed Ground State)
 ```
 
 ### Ground-State Spin Hamiltonian
@@ -141,7 +127,7 @@ Where:
 - $E$ is the non-axial strain splitting parameter ($\approx 0$ in low-strain diamond).
 
 ### Optically Detected Magnetic Resonance (ODMR) Principle
-1. **Optical Pumping**: Continuous green laser excitation ($\lambda = 532\text{ nm}$) pumps electrons from $^{3}A_2 \to\ ^{3}E$. Non-radiative intersystem crossing through singlet states ($^{1}A_1 \to\ ^{1}E$) preferentially polarizes the spin into the $|m_s = 0\rangle$ state.
+1. **Optical Pumping**: Continuous green laser excitation ($\lambda = 532\text{ nm}$) pumps electrons from ground $^{3}A_2 \to\ ^{3}E$. Non-radiative intersystem crossing through singlet intermediate states preferentially polarizes the spin into the $|m_s = 0\rangle$ state.
 2. **Microwave Interrogation**: Swept RF/Microwave frequencies induce transitions $|m_s = 0\rangle \leftrightarrow |m_s = \pm 1\rangle$ at resonance frequencies $f_\pm = D_{gs} \pm \gamma_e B_z$.
 3. **Fluorescence Detection**: Transitions to $|m_s = \pm 1\rangle$ have a higher probability of non-radiative decay, resulting in a **dip in red photoluminescence** ($\lambda = 637\text{--}800\text{ nm}$).
 4. **Field Reconstruction**: Magnetic flux density $B_z = \frac{f_+ - f_-}{2\gamma_e}$ is extracted with sub-nanotesla sensitivity and microsecond response time.
@@ -154,29 +140,23 @@ Where:
 
 ```mermaid
 flowchart TD
-    subgraph Classical_Pipeline["🔴 Classical Hall-Effect Sensing Pipeline"]
-        C1["Stator Current / Voltage Transient"] --> C2["Hall Sensor Magnetoresistive Core"]
-        C2 --> C3["Analog Signal Conditioning & Operational Amplifiers"]
-        C3 --> C4["Inverter PWM EMI Noise Intrusion (±5% Switched Noise)"]
-        C4 --> C5["RC Low-Pass Filter Delay (τ = 50 µs Phase Lag)"]
-        C5 --> C6["ADC Digital Sampling (Quantization Error)"]
-        C6 --> C7["Lagged & Noisy (V, I) Estimates fed to MPPT"]
+    subgraph Classical_Pipeline["Classical Hall-Effect Sensing Pipeline"]
+        C1["Stator Current & Voltage Transient"] --> C2["Hall Sensor Magnetoresistive Core"]
+        C2 --> C3["Analog Signal Conditioning & Op-Amps"]
+        C3 --> C4["Inverter PWM EMI Noise Intrusion (+/- 5%)"]
+        C4 --> C5["RC Low-Pass Filter Delay (tau = 50 us Lag)"]
+        C5 --> C6["ADC Digital Sampling & Quantization"]
+        C6 --> C7["Delayed & Noisy Feedback to MPPT"]
     end
 
-    subgraph Quantum_Pipeline["🟢 Quantum Diamond NV Magnetometer Pipeline"]
+    subgraph Quantum_Pipeline["Quantum Diamond NV Magnetometer Pipeline"]
         Q1["Stator Magnetic Field B_stator(t)"] --> Q2["Diamond NV-Center Atomic Spin Triplet (S = 1)"]
-        Q2 --> Q3["532 nm Green Laser Spin Pumping (|ms = 0⟩ State)"]
-        Q3 --> Q4["Microwave Zeeman Resonance Frequency Shift Δf = 2·γe·Bz"]
+        Q2 --> Q3["532 nm Green Laser Spin Polarization"]
+        Q3 --> Q4["Microwave Zeeman Resonance Shift (Delta_f = 2 * gamma_e * Bz)"]
         Q4 --> Q5["Red Photoluminescence (637-800 nm) Optical Detection"]
-        Q5 --> Q6["Photon Shot-Noise Limited Output (±0.1% Noise, <1 µs Latency)"]
-        Q6 --> Q7["Zero-Lag High-Fidelity Signal fed to MPPT"]
+        Q5 --> Q6["Photon Shot-Noise Limited Output (+/- 0.1% Noise, sub-1 us Latency)"]
+        Q6 --> Q7["Zero-Lag High-Fidelity Feedback to MPPT"]
     end
-
-    classDef redBox fill:#2d0707,stroke:#ef4444,stroke-width:2px,color:#fee2e2;
-    classDef greenBox fill:#022c22,stroke:#10b981,stroke-width:2px,color:#d1fae5;
-
-    class C1,C2,C3,C4,C5,C6,C7 redBox;
-    class Q1,Q2,Q3,Q4,Q5,Q6,Q7 greenBox;
 ```
 
 ---
@@ -185,41 +165,32 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    Start(["Start MPPT Iteration (k)"]) --> SampleQ["Read Quantum NV Sensor:<br/>Instantaneous V(k), I(k) with τ < 1 µs"]
-    SampleQ --> CalcPower["Compute Instantaneous Power:<br/>P(k) = V(k) · I(k)"]
-    CalcPower --> CalcDeltas["Compute Differential Metrics:<br/>ΔP = P(k) - P(k-1)<br/>ΔV = V(k) - V(k-1)"]
+    Start(["Start MPPT Clock Cycle (k)"]) --> SampleQ["Sample Quantum NV Sensor:<br/>Instantaneous V(k), I(k) with latency under 1 us"]
+    SampleQ --> CalcPower["Calculate Instantaneous Power:<br/>P(k) = V(k) * I(k)"]
+    CalcPower --> CalcDeltas["Compute Differentials:<br/>Delta_P = P(k) - P(k-1)<br/>Delta_V = V(k) - V(k-1)"]
     
-    CalcDeltas --> CheckDP{"Is ΔP == 0 ?"}
-    CheckDP -- Yes --> KeepDuty["Maintain Duty Cycle:<br/>D(k) = D(k-1)"]
-    CheckDP -- No --> CheckDPPos{"Is ΔP > 0 ?"}
+    CalcDeltas --> CheckDP{"Is Delta_P equal to 0?"}
+    CheckDP -- Yes --> KeepDuty["Hold Duty Cycle:<br/>D(k) = D(k-1)"]
+    CheckDP -- No --> CheckDPPos{"Is Delta_P > 0 ?"}
 
-    CheckDPPos -- Yes (Power Increasing) --> CheckDV1{"Is ΔV > 0 ?"}
-    CheckDV1 -- Yes --> IncV1["Operating left of MPP<br/>Decrease Duty Cycle: D(k) = D(k-1) - ΔD"]
-    CheckDV1 -- No --> DecV1["Operating right of MPP<br/>Increase Duty Cycle: D(k) = D(k-1) + ΔD"]
+    CheckDPPos -- Yes (Power Increasing) --> CheckDV1{"Is Delta_V > 0 ?"}
+    CheckDV1 -- Yes --> IncV1["Left of MPP<br/>Decrease Duty Cycle: D(k) = D(k-1) - Delta_D"]
+    CheckDV1 -- No --> DecV1["Right of MPP<br/>Increase Duty Cycle: D(k) = D(k-1) + Delta_D"]
 
-    CheckDPPos -- No (Power Decreasing) --> CheckDV2{"Is ΔV > 0 ?"}
-    CheckDV2 -- Yes --> IncV2["Operating right of MPP<br/>Increase Duty Cycle: D(k) = D(k-1) + ΔD"]
-    CheckDV2 -- No --> DecV2["Operating left of MPP<br/>Decrease Duty Cycle: D(k) = D(k-1) - ΔD"]
+    CheckDPPos -- No (Power Decreasing) --> CheckDV2{"Is Delta_V > 0 ?"}
+    CheckDV2 -- Yes --> IncV2["Right of MPP<br/>Increase Duty Cycle: D(k) = D(k-1) + Delta_D"]
+    CheckDV2 -- No --> DecV2["Left of MPP<br/>Decrease Duty Cycle: D(k) = D(k-1) - Delta_D"]
 
-    IncV1 --> Saturation["Apply Duty Cycle Saturation Limits:<br/>D_min (0.05) ≤ D(k) ≤ D_max (0.95)"]
+    IncV1 --> Saturation["Apply Duty Saturation Limits:<br/>D_min (0.05) <= D(k) <= D_max (0.95)"]
     DecV1 --> Saturation
     IncV2 --> Saturation
     DecV2 --> Saturation
     KeepDuty --> Saturation
 
-    Saturation --> UpdateHistory["Update Memory States:<br/>P(k-1) = P(k), V(k-1) = V(k)"]
-    UpdateHistory --> OutputPWM["Send Duty Cycle D(k) to PWM Generator"]
-    OutputPWM --> WaitNext["Wait Next Sampling Clock (Ts = 1 µs)"]
+    Saturation --> UpdateHistory["Update State History:<br/>P(k-1) = P(k), V(k-1) = V(k)"]
+    UpdateHistory --> OutputPWM["Send Duty Cycle D(k) to PWM Gate Driver"]
+    OutputPWM --> WaitNext["Wait Next Sampling Clock (Ts = 1 us)"]
     WaitNext --> Start
-
-    classDef default fill:#0f172a,stroke:#38bdf8,stroke-width:1.5px,color:#f8fafc;
-    classDef decision fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#f8fafc;
-    classDef action fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#f8fafc;
-    classDef startEnd fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#f8fafc;
-
-    class Start,WaitNext startEnd;
-    class CheckDP,CheckDPPos,CheckDV1,CheckDV2 decision;
-    class IncV1,DecV1,IncV2,DecV2,KeepDuty,Saturation,UpdateHistory,OutputPWM action;
 ```
 
 ---
@@ -230,32 +201,24 @@ For maximum energy conversion efficiency, our suite also replicates and integrat
 
 ```mermaid
 graph LR
-    subgraph Inputs["Inputs"]
+    subgraph Inputs["Sensor Inputs"]
         V_dc["DC Voltage V_dc"]
         I_dc["DC Current I_dc"]
     end
 
-    subgraph Neural_Engine["🧠 AI MPPT Layer (RBFN / BPNN)"]
+    subgraph Neural_Engine["AI MPPT Layer (RBFN / BPNN)"]
         Inputs --> Normalization["Min-Max Input Scaling [0, 1]"]
-        Normalization --> RBFN_Layer["Radial Basis Hidden Layer<br/>φ_i(x) = exp(-||x - c_i||² / 2σ_i²)"]
-        RBFN_Layer --> Output_Weights["Synaptic Weight Matrix W · φ + b"]
+        Normalization --> RBFN_Layer["Radial Basis Hidden Layer<br/>phi_i(x) = exp(-dist(x, c_i)^2 / 2*sigma_i^2)"]
+        RBFN_Layer --> Output_Weights["Synaptic Weight Matrix W * phi + b"]
         Output_Weights --> DeNorm["Optimal Duty Cycle D_opt"]
     end
 
-    subgraph Power_Stage["⚡ Quadratic Boost Topology"]
-        DeNorm --> Gate["High-Frequency Switch S (fs = 50 kHz)"]
+    subgraph Power_Stage["Quadratic Boost Converter"]
+        DeNorm --> Gate["Switching Gate (fs = 50 kHz)"]
         Gate --> Stage1["Inductor L1 + Diode D1 Stage"]
-        Stage1 --> Stage2["Intermediate Capacitor C1 + Inductor L2 + Diode D2 Stage"]
-        Stage2 --> HighGainOutput["Voltage Output V_out = V_in / (1 - D)²"]
+        Stage1 --> Stage2["Intermediate C1 + L2 + D2 Stage"]
+        Stage2 --> HighGainOutput["Output Voltage: V_out = V_in / (1 - D)^2"]
     end
-
-    classDef box fill:#0f172a,stroke:#64748b,stroke-width:1.5px,color:#f8fafc;
-    classDef net fill:#1e1b4b,stroke:#8b5cf6,stroke-width:2px,color:#f8fafc;
-    classDef pwr fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#f8fafc;
-
-    class Inputs box;
-    class Neural_Engine net;
-    class Power_Stage pwr;
 ```
 
 ---
@@ -283,10 +246,9 @@ $$\frac{1}{\lambda_i} = \frac{1}{\lambda + 0.08\beta} - \frac{0.035}{\beta^3 + 1
 
 ### 2. PMSG Electrical Equations (d-q Synchronous Frame)
 
-$$\begin{aligned}
-\frac{di_d}{dt} &= -\frac{R_s}{L_d} i_d + \omega_e \frac{L_q}{L_d} i_q - \frac{V_d}{L_d} \\
-\frac{di_q}{dt} &= -\frac{R_s}{L_q} i_q - \omega_e \frac{L_d}{L_q} i_d - \frac{\omega_e \lambda_f}{L_q} - \frac{V_q}{L_q}
-\end{aligned}$$
+$$\frac{di_d}{dt} = -\frac{R_s}{L_d} i_d + \omega_e \frac{L_q}{L_d} i_q - \frac{V_d}{L_d}$$
+
+$$\frac{di_q}{dt} = -\frac{R_s}{L_q} i_q - \omega_e \frac{L_d}{L_q} i_d - \frac{\omega_e \lambda_f}{L_q} - \frac{V_q}{L_q}$$
 
 Electromagnetic torque $T_e$:
 
