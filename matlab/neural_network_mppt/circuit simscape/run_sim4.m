@@ -1,0 +1,14 @@
+mdl = 'WECS_QuadraticBoost_Circuit_v2';
+load_system(mdl);
+set_param([mdl '/Pout_Scope'], 'SaveToWorkspace', 'on');
+set_param([mdl '/Pout_Scope'], 'SaveName', 'Pout_data');
+set_param([mdl '/Pout_Scope'], 'DataFormat', 'StructureWithTime');
+set_param(mdl, 'StopTime', '10.0'); 
+tic;
+simOut = sim(mdl, 'ReturnWorkspaceOutputs', 'on');
+t = toc;
+vals = simOut.Pout_data.signals.values;
+times = simOut.Pout_data.time;
+fprintf('Sim time: %f s\n', t);
+fprintf('Last time step simulated: %f\n', times(end));
+fprintf('Final Pout: %f\n', vals(end));
