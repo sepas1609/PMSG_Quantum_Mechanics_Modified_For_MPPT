@@ -46,15 +46,15 @@ Turbulent Wind Gusts (8 m/s -> 14 m/s) ---> Aerodynamic Torque ---> PMSG Stator 
 ```
 
 ### The Classical Bottleneck
-Traditional MPPT schemes rely on Hall-effect current/voltage sensors or resistive shunts. Under high-frequency power converter switching ($dV/dt > 10\text{ kV}/\mu\text{s}$, $dI/dt > 100\text{ A}/\mu\text{s}$), classical sensors suffer from:
-1. **Severe Electromagnetic Interference (EMI)**: Induces high-frequency noise ($\pm 5\%$) onto feedback lines.
-2. **Filtering Phase Lag**: Analog low-pass filters introduce $30\text{--}80\ \mu\text{s}$ latency.
-3. **MPPT Tracking Failure**: The Perturb and Observe ($P\&O$) gradient detector $\frac{dP}{dV}$ misidentifies the true slope of the power curve during sudden wind gusts, causing generator stalling and hunting oscillations.
+Traditional MPPT schemes rely on Hall-effect current/voltage sensors or resistive shunts. Under high-frequency power converter switching (`dV/dt > 10 kV/μs`, `dI/dt > 100 A/μs`), classical sensors suffer from:
+1. **Severe Electromagnetic Interference (EMI)**: Induces high-frequency noise (±5%) onto feedback lines.
+2. **Filtering Phase Lag**: Analog low-pass filters introduce 30–80 μs latency.
+3. **MPPT Tracking Failure**: The Perturb and Observe (P&O) gradient detector `dP/dV` misidentifies the true slope of the power curve during sudden wind gusts, causing generator stalling and hunting oscillations.
 
 ### The Quantum NV Solution
-By integrating an optical **Diamond Nitrogen-Vacancy (NV) Center Magnetometer**, the stator magnetic field $\mathbf{B}_{stator}$ is measured directly via **Optically Detected Magnetic Resonance (ODMR)**:
-- **Pure Optical Isolation**: Sensor interrogation is performed using a $532\text{ nm}$ green laser and photodetector readout, eliminating galvanic connection to the power stage and rendering the sensor completely immune to electrical EMI.
-- **Sub-Microsecond Latency**: Quantum spin state transitions occur at atomic scales ($<1\ \mu\text{s}$ bandwidth).
+By integrating an optical **Diamond Nitrogen-Vacancy (NV) Center Magnetometer**, the stator magnetic field vector `B_stator` is measured directly via **Optically Detected Magnetic Resonance (ODMR)**:
+- **Pure Optical Isolation**: Sensor interrogation is performed using a 532 nm green laser and photodetector readout, eliminating galvanic connection to the power stage and rendering the sensor completely immune to electrical EMI.
+- **Sub-Microsecond Latency**: Quantum spin state transitions occur at atomic scales (< 1 μs bandwidth).
 - **Superior Energy Yield**: Eliminates limit-cycle oscillations around the Maximum Power Point (MPP), delivering **3.5% to 5.2% higher energy capture** during turbulent gusts.
 
 ---
@@ -100,7 +100,7 @@ graph TD
 
 ## 🔬 Quantum NV-Center Magnetometry Physics
 
-The Nitrogen-Vacancy (NV) center in diamond consists of a substitutional nitrogen atom adjacent to a vacancy in the diamond carbon lattice. The negatively charged $\text{NV}^-$ center possesses an electron spin triplet ($S=1$) ground state with outstanding quantum coherence at room temperature.
+The Nitrogen-Vacancy (NV) center in diamond consists of a substitutional nitrogen atom adjacent to a vacancy in the diamond carbon lattice. The negatively charged NV center possesses an electron spin triplet ($S = 1$) ground state with outstanding quantum coherence at room temperature.
 
 ```
    Triplet Ground State Energy Diagram (3A2)
@@ -127,7 +127,7 @@ Where:
 - $E$ is the non-axial strain splitting parameter ($\approx 0$ in low-strain diamond).
 
 ### Optically Detected Magnetic Resonance (ODMR) Principle
-1. **Optical Pumping**: Continuous green laser excitation ($\lambda = 532\text{ nm}$) pumps electrons from ground $^{3}A_2 \to\ ^{3}E$. Non-radiative intersystem crossing through singlet intermediate states preferentially polarizes the spin into the $|m_s = 0\rangle$ state.
+1. **Optical Pumping**: Continuous green laser excitation ($\lambda = 532\text{ nm}$) pumps electrons from ground state $^{3}A_2 \to\ ^{3}E$. Non-radiative intersystem crossing through singlet intermediate states preferentially polarizes the spin into the $|m_s = 0\rangle$ state.
 2. **Microwave Interrogation**: Swept RF/Microwave frequencies induce transitions $|m_s = 0\rangle \leftrightarrow |m_s = \pm 1\rangle$ at resonance frequencies $f_\pm = D_{gs} \pm \gamma_e B_z$.
 3. **Fluorescence Detection**: Transitions to $|m_s = \pm 1\rangle$ have a higher probability of non-radiative decay, resulting in a **dip in red photoluminescence** ($\lambda = 637\text{--}800\text{ nm}$).
 4. **Field Reconstruction**: Magnetic flux density $B_z = \frac{f_+ - f_-}{2\gamma_e}$ is extracted with sub-nanotesla sensitivity and microsecond response time.
@@ -233,7 +233,7 @@ $$P_m = \frac{1}{2} \rho \pi R^2 C_p(\lambda, \beta) v_w^3$$
 Where:
 - $\rho = 1.225\text{ kg/m}^3$ (air density at sea level).
 - $R = 2.5\text{ m}$ (rotor radius).
-- $v_w$ is instantaneous wind velocity ($\text{m/s}$).
+- $v_w$ is instantaneous wind velocity in $\text{m/s}$.
 - $C_p(\lambda, \beta)$ is the power coefficient governed by tip speed ratio $\lambda = \frac{\omega_m R}{v_w}$ and blade pitch angle $\beta$:
 
 $$C_p(\lambda, \beta) = c_1 \left( \frac{c_2}{\lambda_i} - c_3 \beta - c_4 \right) \exp\left(-\frac{c_5}{\lambda_i}\right) + c_6 \lambda$$
@@ -275,18 +275,18 @@ This provides steep step-up voltage ratios at modest duty cycles ($D = 0.6 \impl
 
 ## 📊 Comparative Benchmarks & Results
 
-Simulated on a **6-second multi-phase stress test** ($0\text{--}2\text{ s}$ baseline at $8\text{ m/s}$, $2\text{--}4\text{ s}$ severe gust at $14\text{ m/s}$ [$+75\%$ surge], $4\text{--}6\text{ s}$ recovery at $9\text{ m/s}$):
+Simulated on a **6-second multi-phase stress test** (0–2 s baseline at 8 m/s, 2–4 s severe gust at 14 m/s [+75% surge], 4–6 s recovery at 9 m/s):
 
 | Performance Metric | Classical Hall-Effect Sensing | Quantum NV-Center Sensing | Improvement / Gain |
 |---|---|---|---|
-| **Sensor Bandwidth / Delay** | $\sim 50\ \mu\text{s}$ (RC filter lag) | **$< 1\ \mu\text{s}$** (atomic spin) | **$50\times$ faster response** |
-| **Feedback Noise Level** | $\pm 5.0\%$ (Inverter EMI) | **$\pm 0.1\%$** (Photon shot-noise) | **$50\times$ noise reduction** |
+| **Sensor Bandwidth / Delay** | ~50 μs (RC filter lag) | **< 1 μs** (atomic spin) | **50x faster response** |
+| **Feedback Noise Level** | ±5.0% (Inverter EMI) | **±0.1%** (Photon shot-noise) | **50x noise reduction** |
 | **EMI Susceptibility** | High (Galvanic / Inductive) | **Zero (Optical isolation)** | **Complete immunity** |
-| **Gust Settling Time ($t = 2.0\text{ s}$)** | $420\text{ ms}$ (Violent ringing) | **$18\text{ ms}$** (Smooth transition) | **$95.7\%$ faster settling** |
-| **MPPT Power Ripple** | $\pm 185\text{ W}$ | **$\pm 8\text{ W}$** | **$95.6\%$ ripple reduction** |
-| **Mean Steady-State Efficiency** | $91.4\%$ | **$97.8\%$** | **$+6.4\%$ absolute gain** |
-| **Gust Period Energy Harvest ($2\text{--}4\text{ s}$)** | $7.82\text{ kJ}$ | **$8.14\text{ kJ}$** | **$+4.09\%$ energy recovered** |
-| **Total Simulation Energy Yield ($0\text{--}6\text{ s}$)** | $16.45\text{ kJ}$ | **$17.04\text{ kJ}$** | **$+3.58\%$ net energy gain** |
+| **Gust Settling Time (t = 2.0 s)** | 420 ms (Violent ringing) | **18 ms** (Smooth transition) | **95.7% faster settling** |
+| **MPPT Power Ripple** | ±185 W | **±8 W** | **95.6% ripple reduction** |
+| **Mean Steady-State Efficiency** | 91.4% | **97.8%** | **+6.4% absolute gain** |
+| **Gust Period Energy Harvest (2–4 s)** | 7.82 kJ | **8.14 kJ** | **+4.09% energy recovered** |
+| **Total Simulation Energy Yield (0–6 s)** | 16.45 kJ | **17.04 kJ** | **+3.58% net energy gain** |
 
 ---
 
@@ -365,7 +365,7 @@ The repository features a web-based **Digital Twin & 3D Simulation Platform** bu
 - **3D Wind Turbine & Diamond NV-Center Rendering**: Dynamic blade rotation synchronized to actual generator RPM, wind particle flow fields, and atomic lattice rendering of nitrogen-vacancy centers.
 - **Dual-Channel High-Speed Oscilloscope**: Real-time voltage, current, power, and duty cycle waveforms with trigger lock and timebase adjustment.
 - **Quantum Lab ODMR Visualizer**: Real-time Zeeman splitting resonance dips under varying stator magnetic field vectors.
-- **Interactive Gust Generator**: Inject instantaneous step gusts ($8 \to 14\text{ m/s}$), sinusoidal turbulence, or custom wind speed profiles.
+- **Interactive Gust Generator**: Inject instantaneous step gusts (8 to 14 m/s), sinusoidal turbulence, or custom wind speed profiles.
 - **Auditory Synthesizer**: Web Audio API tone generator proportional to generator electrical frequency.
 
 ### Quick Start (Web App)
