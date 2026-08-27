@@ -1,0 +1,6 @@
+{
+  "name": "Quantum PMSG Wind Turbine MPPT Simulator",
+  "description": "Interactive side-by-side 3D simulation comparing Classical Hall-Sensor PMSG vs Quantum Diamond NV-Center Magnetometer MPPT under turbulent wind gusts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
